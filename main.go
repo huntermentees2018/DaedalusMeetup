@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/huntermentees2018/gae-hello-world/src/scheduler"
+	"github.com/huntermentees2018/DaedalusMeetup/src/scheduler"
 )
 
 func main() {

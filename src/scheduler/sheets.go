@@ -2,32 +2,21 @@ package scheduler
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 
-	"golang.org/x/oauth2/google"
 	"google.golang.org/api/sheets/v4"
 )
 
+// Sheets does google sheets stuff
 func Sheets() {
-	b, err := ioutil.ReadFile("credentials.json")
-	if err != nil {
-		log.Fatalf("Unable to read client secret file: %v", err)
-	}
-
-	// If modifying these scopes, delete your previously saved token.json.
-	config, err := google.ConfigFromJSON(b, "https://www.googleapis.com/auth/spreadsheets.readonly")
-	if err != nil {
-		log.Fatalf("Unable to parse client secret file to config: %v", err)
-	}
-	client := getClient(config)
+	client := setupToken()
 
 	srv, err := sheets.New(client)
 	if err != nil {
 		log.Fatalf("Unable to retrieve Sheets client: %v", err)
 	}
 
-	// https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
+	// https://docs.google.com/spreadsheets/d/1Mz0muHRtWeSLshVHszhhizXiTIsT8vQbhWCsF8bLhnI/edit
 	spreadsheetID := "1Mz0muHRtWeSLshVHszhhizXiTIsT8vQbhWCsF8bLhnI"
 	readRange := "Responses!A2:I"
 	resp, err := srv.Spreadsheets.Values.Get(spreadsheetID, readRange).Do()

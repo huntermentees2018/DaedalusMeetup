@@ -2,11 +2,9 @@ package scheduler
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"time"
 
-	"golang.org/x/oauth2/google"
 	calendar "google.golang.org/api/calendar/v3"
 )
 
@@ -14,20 +12,11 @@ func MakeEvent(people []string) {
 
 }
 
-/*Schedule executes google calendar stuff*/
+// Schedule executes google calendar stuff
 func Schedule() {
+	client := setupToken()
+
 	calendarID := "n2tmsnjvcpqegjjtl5tmjojarc@group.calendar.google.com"
-	b, err := ioutil.ReadFile("credentials.json")
-	if err != nil {
-		log.Fatalf("Unable to read client secret file: %v", err)
-	}
-
-	config, err := google.ConfigFromJSON(b, calendar.CalendarEventsScope, calendar.CalendarReadonlyScope)
-	if err != nil {
-		log.Fatalf("Unable to parse client secret file to config: %v", err)
-	}
-	client := getClient(config)
-
 	srv, err := calendar.New(client)
 	if err != nil {
 		log.Fatalf("Unable to retrieve Calendar client: %v", err)
