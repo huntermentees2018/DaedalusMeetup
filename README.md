@@ -1,3 +1,5 @@
-# gae-hello-world
-Hello World example for Google App Engine in Go.
-https://cloud.google.com/go/getting-started/hello-world
+# Daedalus Meetup
+  Golang project to randomly pair Daedalus cohort students to talk to each other
+  
+## Installation
+
