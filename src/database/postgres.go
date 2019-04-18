@@ -1,52 +1,57 @@
 package database
 
 import (
-	"database/sql"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
-	"net/http"
-	"os"
-	// Import the Postgres SQL driver.
-	// _ "github.com/lib/pq"
+
+	"github.com/huntermentees2018/DaedalusMeetup/src/database/models"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
-var (
-	db *sql.DB
+//connectPostgres connects to postgres
+func connectPostgres(url string, extlog bool) (*gorm.DB, error) {
+	db, err := gorm.Open("postgres", url)
 
-	connectionName = os.Getenv("POSTGRES_INSTANCE_CONNECTION_NAME")
-	dbUser         = os.Getenv("POSTGRES_USER")
-	dbPassword     = os.Getenv("POSTGRES_PASSWORD")
-	dsn            = fmt.Sprintf("user=%s password=%s host=/cloudsql/%s", dbUser, dbPassword, connectionName)
-)
-
-func init() {
-	var err error
-	db, err = sql.Open("postgres", dsn)
 	if err != nil {
-		log.Fatalf("Could not open db: %v", err)
+		return nil, err
 	}
 
-	// Only allow 1 connection to the database to avoid overloading it.
-	db.SetMaxIdleConns(1)
-	db.SetMaxOpenConns(1)
+	db.LogMode(true)
+	if extlog {
+		// db.SetLogger()
+	}
+
+	db.SingularTable(true)
+	db.DB().SetMaxIdleConns(10)
+	db.DB().SetMaxOpenConns(100)
+
+	return db, nil
 }
 
-// PostgresDemo is an example of making a Postgres database query.
-func PostgresDemo(w http.ResponseWriter, r *http.Request) {
-	rows, err := db.Query("SELECT NOW() as now")
+// Init sets up our database with our models
+func Init() {
+	b, err := ioutil.ReadFile("config.json")
 	if err != nil {
-		log.Printf("db.Query: %v", err)
-		http.Error(w, "Error querying database", http.StatusInternalServerError)
+		log.Fatalf("Unable to read config: %v", err)
+	}
+	var settings map[string]string
+	json.Unmarshal(b, &settings)
+	db, err := connectPostgres(settings["postgresURI"], false)
+	defer db.Close()
+	if err != nil {
+		fmt.Println("err: ", err)
 		return
 	}
-	defer rows.Close()
+	fmt.Println("db: ", db)
 
-	now := ""
-	rows.Next()
-	if err := rows.Scan(&now); err != nil {
-		log.Printf("rows.Scan: %v", err)
-		http.Error(w, "Error scanning database", http.StatusInternalServerError)
-		return
-	}
-	fmt.Fprintf(w, "Now: %v", now)
+	db.AutoMigrate(&models.Student{})
+	db.Create(&models.Student{Name: "John", Email: "hpoon16@huntersoe.org"})
+	var student models.Student
+	db.First(&student, "Name = ?", "Miguel")
+	db.Model(&student).Update("Email", "updated email")
+	// db.Delete(&student)
+	fmt.Println(db)
 }

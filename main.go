@@ -1,10 +1,12 @@
 package main
 
 import (
-	"github.com/huntermentees2018/DaedalusMeetup/src/scheduler"
+	"github.com/huntermentees2018/DaedalusMeetup/src/database"
 )
 
 func main() {
-	scheduler.Sheets()
+	database.Init()
+	// database.Init()
+	// scheduler.Sheets()
 	// scheduler.Schedule()
 }
