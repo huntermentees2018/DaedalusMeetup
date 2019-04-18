@@ -47,6 +47,7 @@ func Schedule() {
 		Summary:     "Google I/O 2015",
 		Location:    "800 Howard St., San Francisco, CA 94103",
 		Description: "A chance to hear more about Google's developer products.",
+		GuestsCanModify: true,
 		Start: &calendar.EventDateTime{
 			DateTime: "2019-05-28T09:00:00-07:00",
 			TimeZone: "America/Los_Angeles",
@@ -57,12 +58,12 @@ func Schedule() {
 		},
 		Recurrence: []string{"RRULE:FREQ=DAILY;COUNT=2"},
 		Attendees: []*calendar.EventAttendee{
-			&calendar.EventAttendee{Email: "lpage@example.com"},
-			&calendar.EventAttendee{Email: "sbrin@example.com"},
+			&calendar.EventAttendee{Email: "example.com"},
+			&calendar.EventAttendee{Email: "exampleb.com"},
 		},
 	}
 
-	event, err = cls.Insert(calendarID, event).Do()
+	event, err = cls.Insert(calendarID, event).SendUpdates("all").Do()
 	if err != nil {
 		log.Fatalf("Unable to create event. %v\n", err)
 	}
