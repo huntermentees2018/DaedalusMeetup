@@ -95,16 +95,15 @@ func main() {
 		panic(err)
 	}
 	defer rows.Close()
-	var students []models.Student
 	var student models.Student
 	for rows.Next() {
-		rows.Scan(&student.Name, &student.Email, &student.Consent, &student.Preferences, &student.Location)
-		students = append(students, student)
+		db.ScanRows(rows, &student)
+		fmt.Printf("student = %+v\n ", student)
 	}
 	if err := rows.Err(); err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(students)
+	// fmt.Println(students)
 	// MatchPeeps
 	defer db.Close()
 	// _, cls := scheduler.ScheduleInit()
