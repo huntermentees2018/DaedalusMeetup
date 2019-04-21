@@ -1,6 +1,8 @@
 package src
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"strings"
 	"time"
 )
@@ -8,6 +10,22 @@ import (
 const (
 	layoutISO = "1/02/2006 15:04:05"
 )
+
+type configFormat struct {
+	postgresURI string
+	calendarID  string
+}
+
+// GetConfig returns a config string from a config.json file
+func GetConfig(key string) string {
+	config := make(map[string]string)
+	b, err := ioutil.ReadFile("config.json")
+	if err != nil {
+		panic(err)
+	}
+	json.Unmarshal(b, &config)
+	return config[key]
+}
 
 // PrefCheck counts which runes "M", "A", "E" are both in a and b in a map and returns it as a map
 func PrefCheck(a, b []rune) map[rune]bool {

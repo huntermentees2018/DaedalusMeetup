@@ -41,8 +41,8 @@ func Init() *gorm.DB {
 		panic(err)
 	}
 
-	db.DropTableIfExists(&models.Student{})
-	db.AutoMigrate(&models.Student{})
+	db.DropTableIfExists(&models.Student{}, &models.Meeting{})
+	db.AutoMigrate(&models.Student{}, &models.Meeting{})
 
 	return db
 }
