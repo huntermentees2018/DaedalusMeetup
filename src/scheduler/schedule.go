@@ -5,15 +5,12 @@ import (
 	"log"
 	"time"
 
+	"github.com/huntermentees2018/DaedalusMeetup/src/database/models"
 	calendar "google.golang.org/api/calendar/v3"
 )
 
-func MakeEvent(people []string) {
-
-}
-
-// Schedule executes google calendar stuff
-func Schedule() {
+// Schedule takes in two students and returns if it succeeded in creating an event
+func Schedule(*models.Student, *models.Student) bool {
 	client := setupToken()
 
 	calendarID := "n2tmsnjvcpqegjjtl5tmjojarc@group.calendar.google.com"
@@ -44,9 +41,9 @@ func Schedule() {
 	cls := calendar.NewEventsService(srv)
 
 	event := &calendar.Event{
-		Summary:     "Google I/O 2015",
-		Location:    "800 Howard St., San Francisco, CA 94103",
-		Description: "A chance to hear more about Google's developer products.",
+		Summary:         "Google I/O 2015",
+		Location:        "800 Howard St., San Francisco, CA 94103",
+		Description:     "A chance to hear more about Google's developer products.",
 		GuestsCanModify: true,
 		Start: &calendar.EventDateTime{
 			DateTime: "2019-05-28T09:00:00-07:00",
@@ -68,4 +65,5 @@ func Schedule() {
 		log.Fatalf("Unable to create event. %v\n", err)
 	}
 	fmt.Printf("Event created: %s\n", event.HtmlLink)
+	return true
 }

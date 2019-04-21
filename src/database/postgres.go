@@ -2,7 +2,6 @@ package database
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 
@@ -20,19 +19,16 @@ func connectPostgres(url string, extlog bool) (*gorm.DB, error) {
 	}
 
 	db.LogMode(true)
+	//external logging file
 	if extlog {
-		// db.SetLogger()
+		// db.SetLogger(log.New(f, ))
 	}
-
-	db.SingularTable(true)
-	db.DB().SetMaxIdleConns(10)
-	db.DB().SetMaxOpenConns(100)
 
 	return db, nil
 }
 
 // Init sets up our database with our models
-func Init() {
+func Init() *gorm.DB {
 	b, err := ioutil.ReadFile("config.json")
 	if err != nil {
 		log.Fatalf("Unable to read config: %v", err)
@@ -40,18 +36,13 @@ func Init() {
 	var settings map[string]string
 	json.Unmarshal(b, &settings)
 	db, err := connectPostgres(settings["postgresURI"], false)
-	defer db.Close()
-	if err != nil {
-		fmt.Println("err: ", err)
-		return
-	}
-	fmt.Println("db: ", db)
 
+	if err != nil {
+		panic(err)
+	}
+
+	db.DropTableIfExists(&models.Student{})
 	db.AutoMigrate(&models.Student{})
-	db.Create(&models.Student{Name: "John", Email: "hpoon16@huntersoe.org"})
-	var student models.Student
-	db.First(&student, "Name = ?", "Miguel")
-	db.Model(&student).Update("Email", "updated email")
-	// db.Delete(&student)
-	fmt.Println(db)
+
+	return db
 }
