@@ -52,7 +52,7 @@ func IsNewerTime(timeOne string, timeTwo string) bool {
 	return t1.After(t2)
 }
 
-// DaysL converts day strings to runes (e.g: "Monday, Tuesday" => ["M", "T"])
+// DaysL converts day strings to rune arr which is a string (e.g: "Monday, Tuesday" => "MT")
 func DaysL(days string) string {
 	if days == "" {
 		return ""

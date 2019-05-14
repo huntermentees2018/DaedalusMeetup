@@ -1,12 +1,16 @@
 package models
 
-import "github.com/jinzhu/gorm"
+import (
+	"github.com/jinzhu/gorm"
+)
 
 // Meeting describes a meeting between two students with the corresponding event id and date that it is happening
 type Meeting struct {
 	gorm.Model
-	StudentOneID int
-	StudentTwoID int
+	StudentOneID uint `gorm:"not null"`
+	StudentTwoID uint `gorm:"not null"`
+	Confirmed    bool `gorm:"not null"`
 	EventID      string
-	DateTime     string
+	StartTime    string
+	EndTime      string
 }
