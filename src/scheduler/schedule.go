@@ -54,6 +54,7 @@ func CreateTimeTable(students []models.Student) map[string]map[rune][]uint {
 			}
 		}
 	}
+	fmt.Printf("week = %+v\n ", week)
 	return week
 }
 
@@ -62,30 +63,37 @@ func SchedulePeeps(cls *calendar.EventsService, db *gorm.DB, timeTable map[strin
 	log.Println("Scheduling people...")
 	var studentOne models.Student
 	var studentTwo models.Student
+
 	isEmpty := func(ids []uint) bool { return len(ids) == 0 }
 	hasPair := func(ids []uint) bool { return len(ids) > 1 }
+
 	for src.TableIdsEach(timeTable, isEmpty) == false {
-		m := src.TableIdsEach(timeTable, hasPair) == false
-		fmt.Printf("m = %+v\n ", m)
 		for src.TableIdsEach(timeTable, hasPair) == false {
-			for _, day := range timeTable {
-				for _, ids := range day {
+			for dow, day := range timeTable {
+				for tod, ids := range day {
 					if len(ids) > 1 {
+						start, finish := src.GenerateTimeInterval(dow, tod)
 						db.First(&studentOne, ids[0])
 						db.First(&studentTwo, ids[1])
-						MatchPeeps(db, cls, studentOne, studentTwo, "2019-05-28T15:00:00-07:00", "2019-05-28T17:00:00-07:00")
+						log.Printf("Matching %+v and %+v", studentOne.Name, studentTwo.Name)
+						MatchPeeps(db, cls, studentOne, studentTwo, start, finish)
 						timeTable = src.RemoveIDFromTimeTable(timeTable, []uint{studentOne.ID, studentTwo.ID})
 					}
 				}
 			}
 		}
 		left := src.LeftFromTable(timeTable)
+		if len(left) == 0 {
+			break
+		}
 		if len(left) > 1 {
 			db.First(&studentOne, left[0])
 			db.First(&studentTwo, left[1])
+			log.Printf("Matching %+v and %+v", studentOne.Name, studentTwo.Name)
 			MatchPeeps(db, cls, studentOne, studentTwo, "2019-05-28T15:00:00-07:00", "2019-05-28T17:00:00-07:00")
 			timeTable = src.RemoveIDFromTimeTable(timeTable, []uint{studentOne.ID, studentTwo.ID})
 		} else {
+			log.Println("Somebody got left out")
 			timeTable = src.RemoveIDFromTimeTable(timeTable, []uint{left[0]})
 		}
 	}

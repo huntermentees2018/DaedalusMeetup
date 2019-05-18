@@ -3,6 +3,7 @@ package src
 import (
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"strings"
 	"time"
 )
@@ -27,6 +28,42 @@ func GetConfig(key string) string {
 	return config[key]
 }
 
+// GenerateTimeInterval finds the time to pair
+func GenerateTimeInterval(dayOfWeek string, timeOfDay rune) (string, string) {
+	var daysOfWeek = map[string]time.Weekday{
+		"Sunday":    time.Sunday,
+		"Monday":    time.Monday,
+		"Tuesday":   time.Tuesday,
+		"Wednesday": time.Wednesday,
+		"Thursday":  time.Thursday,
+		"Friday":    time.Friday,
+		"Saturday":  time.Saturday,
+	}
+
+	var start, end time.Time
+
+	for i := 1; i < 6; i++ {
+		now := time.Now()
+		weekDay := now.AddDate(0, 0, i).Weekday()
+		if daysOfWeek[dayOfWeek] == weekDay {
+			start = now.AddDate(0, 0, i)
+			end = now.AddDate(0, 0, i)
+			if timeOfDay == 77 {
+				start = start.Add(8 * time.Hour)
+				end = end.Add(8 * time.Hour).Add(30 * time.Minute)
+			} else if timeOfDay == 65 {
+				start = start.Add(12 * time.Hour)
+				end = end.Add(12 * time.Hour).Add(30 * time.Minute)
+			} else {
+				start = start.Add(17 * time.Hour)
+				end = end.Add(17 * time.Hour).Add(30 * time.Minute)
+			}
+		}
+	}
+	log.Printf("start.Format(time.RFC3339) = %+v\n ", start.Format(time.RFC3339))
+	return start.Format(time.RFC3339), end.Format(time.RFC3339)
+}
+
 // PrefCheck counts which runes "M", "A", "E" are both in a and b in a map and returns it as a map
 // sample input ("ME", "MAE")
 func PrefCheck(a, b string) map[rune]bool {
@@ -44,16 +81,6 @@ func PrefCheck(a, b string) map[rune]bool {
 		}
 	}
 	return timesC
-}
-
-func Filter(vs []string, f func(string) bool) []string {
-	vsf := make([]string, 0)
-	for _, v := range vs {
-		if f(v) && len(v) > 7 {
-			vsf = append(vsf, v)
-		}
-	}
-	return vsf
 }
 
 func idInSlice(a uint, ids []uint) bool {
