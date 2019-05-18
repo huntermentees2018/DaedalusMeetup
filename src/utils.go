@@ -28,7 +28,8 @@ func GetConfig(key string) string {
 }
 
 // PrefCheck counts which runes "M", "A", "E" are both in a and b in a map and returns it as a map
-func PrefCheck(a, b []rune) map[rune]bool {
+// sample input ("ME", "MAE")
+func PrefCheck(a, b string) map[rune]bool {
 	times := map[rune]uint{77: 0, 65: 0, 69: 0}
 	timesC := map[rune]bool{77: false, 65: false, 69: false}
 	for _, c := range a {
@@ -45,7 +46,83 @@ func PrefCheck(a, b []rune) map[rune]bool {
 	return timesC
 }
 
-// IsNewerTime checks if the first param time is newer than the secondk
+func Filter(vs []string, f func(string) bool) []string {
+	vsf := make([]string, 0)
+	for _, v := range vs {
+		if f(v) && len(v) > 7 {
+			vsf = append(vsf, v)
+		}
+	}
+	return vsf
+}
+
+func idInSlice(a uint, ids []uint) bool {
+	for _, b := range ids {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
+
+// RemoveIDFromTimeTable removes an Id from the time table
+func RemoveIDFromTimeTable(timeTable map[string]map[rune][]uint, idsToRemove []uint) map[string]map[rune][]uint {
+	for a, day := range timeTable {
+		for time, ids := range day {
+			temp := []uint{}
+			for _, id := range ids {
+				if !idInSlice(id, idsToRemove) {
+					temp = append(temp, id)
+				}
+			}
+			timeTable[a][time] = temp
+		}
+	}
+
+	return timeTable
+}
+
+// TableIdsEach checks if the time table is empty
+func TableIdsEach(timeTable map[string]map[rune][]uint, test func([]uint) bool) bool {
+	b := true
+	for _, day := range timeTable {
+		for _, ids := range day {
+			if test(ids) {
+				b = false
+			}
+		}
+	}
+	return b
+}
+
+// SliceUniqMap returns unique slice of ids
+func SliceUniqMap(s []uint) []uint {
+	seen := make(map[uint]struct{}, len(s))
+	j := 0
+	for _, v := range s {
+		if _, ok := seen[v]; ok {
+			continue
+		}
+		seen[v] = struct{}{}
+		s[j] = v
+		j++
+	}
+	return s[:j]
+}
+
+// LeftFromTable returns the ids that are left in the time table
+func LeftFromTable(timeTable map[string]map[rune][]uint) (ret []uint) {
+	for _, day := range timeTable {
+		for _, ids := range day {
+			for _, id := range ids {
+				ret = append(ret, id)
+			}
+		}
+	}
+	return SliceUniqMap(ret)
+}
+
+// IsNewerTime checks if the first param time is newer than the second
 func IsNewerTime(timeOne string, timeTwo string) bool {
 	t1, _ := time.Parse(layoutISO, timeOne)
 	t2, _ := time.Parse(layoutISO, timeTwo)
@@ -64,19 +141,4 @@ func DaysL(days string) string {
 		c = append(c, rune(day[0]))
 	}
 	return string(c)
-}
-
-// RegexCommand just checks if the string is a certain string
-func RegexCommand(text string) string {
-	if strings.Contains(text, "unsubscribe") {
-		return "unsubscribe"
-	} else if strings.Contains(text, "subscribe") {
-		return "subscribe"
-	} else if strings.Contains(text, "list") {
-		return "list"
-	} else if strings.Contains(text, "help") {
-		return "help"
-	}
-
-	return "idk"
 }

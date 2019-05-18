@@ -1,6 +1,7 @@
 package scheduler
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"math/rand"
@@ -12,12 +13,86 @@ import (
 	calendar "google.golang.org/api/calendar/v3"
 )
 
-// SchedulePeeps takes in students array and schedules
-// func SchedulePeeps([]models.Student) bool {
-// }
+// CreateTimeTable takes in students array and schedules
+func CreateTimeTable(students []models.Student) map[string]map[rune][]uint {
+	log.Println("Creating Time Table...")
+	week := map[string]map[rune][]uint{
+		"Monday": {
+			65: []uint{},
+			77: []uint{},
+			69: []uint{},
+		},
+		"Tuesday": {
+			65: []uint{},
+			77: []uint{},
+			69: []uint{},
+		},
+		"Wednesday": {
+			65: []uint{},
+			77: []uint{},
+			69: []uint{},
+		},
+		"Thursday": {
+			65: []uint{},
+			77: []uint{},
+			69: []uint{},
+		},
+		"Friday": {
+			65: []uint{},
+			77: []uint{},
+			69: []uint{},
+		},
+	}
+	for _, stu := range students {
+		stuPref := []models.Preference{}
+		json.Unmarshal([]byte(stu.Preferences), &stuPref)
+		for _, pref := range stuPref {
+			for _, c := range pref.Time {
+				ids := week[pref.Day][c]
+				ids = append(ids, stu.ID)
+				week[pref.Day][c] = ids
+			}
+		}
+	}
+	return week
+}
+
+// SchedulePeeps schedules the people
+func SchedulePeeps(cls *calendar.EventsService, db *gorm.DB, timeTable map[string]map[rune][]uint) {
+	log.Println("Scheduling people...")
+	var studentOne models.Student
+	var studentTwo models.Student
+	isEmpty := func(ids []uint) bool { return len(ids) == 0 }
+	hasPair := func(ids []uint) bool { return len(ids) > 1 }
+	for src.TableIdsEach(timeTable, isEmpty) == false {
+		m := src.TableIdsEach(timeTable, hasPair) == false
+		fmt.Printf("m = %+v\n ", m)
+		for src.TableIdsEach(timeTable, hasPair) == false {
+			for _, day := range timeTable {
+				for _, ids := range day {
+					if len(ids) > 1 {
+						db.First(&studentOne, ids[0])
+						db.First(&studentTwo, ids[1])
+						MatchPeeps(db, cls, studentOne, studentTwo, "2019-05-28T15:00:00-07:00", "2019-05-28T17:00:00-07:00")
+						timeTable = src.RemoveIDFromTimeTable(timeTable, []uint{studentOne.ID, studentTwo.ID})
+					}
+				}
+			}
+		}
+		left := src.LeftFromTable(timeTable)
+		if len(left) > 1 {
+			db.First(&studentOne, left[0])
+			db.First(&studentTwo, left[1])
+			MatchPeeps(db, cls, studentOne, studentTwo, "2019-05-28T15:00:00-07:00", "2019-05-28T17:00:00-07:00")
+			timeTable = src.RemoveIDFromTimeTable(timeTable, []uint{studentOne.ID, studentTwo.ID})
+		} else {
+			timeTable = src.RemoveIDFromTimeTable(timeTable, []uint{left[0]})
+		}
+	}
+}
 
 // MatchPeeps matches two students together and returns the event Id
-func MatchPeeps(db *gorm.DB, cls *calendar.EventsService, stuOne models.Student, stuTwo models.Student) string {
+func MatchPeeps(db *gorm.DB, cls *calendar.EventsService, stuOne models.Student, stuTwo models.Student, start string, end string) {
 	var location string
 	rand.Seed(time.Now().UnixNano())
 	choice := rand.Intn(2)
@@ -26,9 +101,6 @@ func MatchPeeps(db *gorm.DB, cls *calendar.EventsService, stuOne models.Student,
 	} else {
 		location = stuTwo.Location
 	}
-	// TODO : create algorithm that will choose a time for the two students
-	start := "2019-05-28T15:00:00-07:00"
-	end := "2019-05-28T17:00:00-07:00"
 
 	event := &calendar.Event{
 		Summary:         "Random Daedalus 1 on 1 Meetup!",
@@ -69,7 +141,6 @@ func MatchPeeps(db *gorm.DB, cls *calendar.EventsService, stuOne models.Student,
 	log.Printf("Created meeting: %s\n", resp.Summary)
 	fmt.Printf("Event created: %s\n", resp.HtmlLink)
 	fmt.Printf("resp.Id = %+v\n ", resp.Id)
-	return resp.Id
 }
 
 // GetRecent gets recent calendar events
